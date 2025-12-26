@@ -2,6 +2,10 @@
 
 A web application designed to help users track their daily screen habits, analyze focus levels, and detect early signs of digital burnout.
 
+## Live Demo
+
+[View Live Project](https://theallmyti.github.io/FocusDrift-Detector/)
+
 ## Features
 
 - **Daily Tracking**: Input screen time, app switches, focus levels, breaks, sleep duration, and work type.
