@@ -257,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update UI
         updateDashboard(results, date);
         initChart(allData);
+        updateExportButton(allData);
 
         // Feedback animation
         const btn = e.target.querySelector('button');
@@ -265,8 +266,53 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => btn.textContent = originalText, 2000);
     });
 
+    // --- CSV Export ---
+    const exportBtn = document.getElementById('exportCsvBtn');
+
+    function updateExportButton(data) {
+        exportBtn.disabled = data.length === 0;
+        exportBtn.title = data.length === 0 ? 'No saved entries yet' : '';
+    }
+
+    function csvCell(value) {
+        const s = value === undefined || value === null ? '' : String(value);
+        return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    }
+
+    function localDateString(d = new Date()) {
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function exportCSV() {
+        const data = loadData();
+        if (data.length === 0) return;
+
+        const header = ['date', 'screenTime', 'switches', 'focus', 'breaks', 'sleep', 'burnoutScore', 'focusStability'];
+        const rows = [...data]
+            .sort((a, b) => a.date.localeCompare(b.date))
+            .map(({ date, inputs = {}, results = {} }) => [
+                date, inputs.screenTime, inputs.switches, inputs.focus,
+                inputs.breaks, inputs.sleep, results.burnoutScore, results.focusStability
+            ]);
+
+        const csv = [header, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `focusdrift-entries-${localDateString()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    exportBtn.addEventListener('click', exportCSV);
+
     // --- Initialization ---
     const allData = loadData();
     initChart(allData);
     checkToday(allData, today);
+    updateExportButton(allData);
 });
